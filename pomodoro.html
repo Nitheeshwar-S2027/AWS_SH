@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pomodoro Timer</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0; /* Light background for the body */
+      color: #333; /* Dark text color */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .timer-container {
+      text-align: center;
+      background-color: #ffffff; /* White background for the timer container */
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Softer shadow */
+      margin-top: 20%;
+    }
+
+    .progressbar {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 10px solid grey; /* Grey border */
+      margin: 20px auto;
+      overflow: hidden;
+    }
+
+    .progressbar-inner {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: conic-gradient(grey 0deg, transparent 0deg); /* Grey background */
+      border-radius: 50%;
+      transition: background 1s linear;
+    }
+
+    .progressbar-number {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      color: #333; /* Dark text color for the timer number */
+    }
+
+    .controls button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: grey; /* Grey for buttons */
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .controls button:hover {
+      background-color: #333; /* Darker shade on hover */
+    }
+
+    .settings {
+      margin-top: 20px;
+    }
+
+    .settings input {
+      width: 50px;
+      margin-left: 10px;
+      border: 1px solid #ccc; /* Light border for input fields */
+      border-radius: 5px;
+      padding: 5px; /* Padding for input fields */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="timer-container">
+    <h1>Pomodoro Timer</h1>
+    <div class="progressbar">
+      <div class="progressbar-inner"></div>
+      <div class="progressbar-number">25:00</div>
+    </div>
+    <div class="controls">
+      <button id="startbtn">Start</button>
+      <button id="pausebtn">Pause</button>
+      <button id="resetbtn">Reset</button>
+    </div>
+    <div class="settings">
+      <label for="work-duration">Work Duration (minutes):</label>
+      <input type="number" id="work-duration" value="25" min="1" />
+      <label for="break-duration">Break Duration (minutes):</label>
+      <input type="number" id="break-duration" value="5" min="1" />
+    </div>
+  </div>
+  <audio id="alarm" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+  <script>
+    const alarm = document.getElementById("alarm");
+                        let isPaused = true;
+                        let intervalId;
+                        let timerValue;
+                        let isWorkTime = true;
+                        let workDuration = 25 * 60; // 25 minutes in seconds
+                        let breakDuration = 5 * 60; // 5 minutes in seconds
+
+                        const progressbarInner = document.querySelector(".progressbar-inner");
+                        const progressbarNumber = document.querySelector(".progressbar-number");
+
+                        document.getElementById("startbtn").addEventListener("click", startTimer);
+                        document.getElementById("pausebtn").addEventListener("click", pauseTimer);
+                        document.getElementById("resetbtn").addEventListener("click", resetTimer);
+                        document.getElementById("work-duration").addEventListener("change", updateWorkDuration);
+                        document.getElementById("break-duration").addEventListener("change", updateBreakDuration);
+
+                        function startTimer() {
+                            if (isPaused) {
+                                isPaused = false;
+                                timerValue = isWorkTime ? workDuration : breakDuration;
+                                clearInterval(intervalId);
+                                intervalId = setInterval(updateTimer, 1000);
+                            }
+                        }
+
+                        function updateTimer() {
+                            if (timerValue > 0) {
+                                timerValue--;
+                                const minutes = Math.floor(timerValue / 60);
+                                const seconds = timerValue % 60;
+                                progressbarNumber.textContent = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+                                const totalDuration = isWorkTime ? workDuration : breakDuration;
+                                const degree = ((totalDuration - timerValue) / totalDuration) * 360;
+                                progressbarInner.style.background = `conic-gradient(grey ${degree}deg, transparent ${degree}deg)`;
+                            } else {
+                                alarm.play();
+                                isWorkTime = !isWorkTime;
+                                timerValue = isWorkTime ? workDuration : breakDuration;
+                                displayNotification(isWorkTime ? "Time to work!" : "Time for a break!");
+                            }
+                        }
+
+                        function displayNotification(message) {
+                            const notificationDiv = document.createElement('div');
+                            notificationDiv.textContent = message;
+                            notificationDiv.style.position = 'fixed';
+                            notificationDiv.style.top = '20px';
+                            notificationDiv.style.left = '50%';
+                            notificationDiv.style.transform = 'translateX(-50%)';
+                            notificationDiv.style.backgroundColor = '#333';
+                            notificationDiv.style.color = '#fff';
+                            notificationDiv.style.padding = '10px 20px';
+                            notificationDiv.style.borderRadius = '5px';
+                            notificationDiv.style.zIndex = '1000';
+                            document.body.appendChild(notificationDiv);
+                            setTimeout(() => {
+                                document.body.removeChild(notificationDiv);
+                            }, 3000);
+                        }
+
+                        function pauseTimer() {
+                            isPaused = true;
+                            clearInterval(intervalId);
+                        }
+
+                        function resetTimer() {
+                            pauseTimer();
+                            timerValue = isWorkTime ? workDuration : breakDuration;
+                            const minutes = Math.floor(timerValue / 60);
+                            const seconds = timerValue % 60;
+                            progressbarNumber.textContent = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+                            progressbarInner.style.background = `conic-gradient(grey  0deg, transparent 0deg)`;
+                        }
+
+                        function updateWorkDuration() {
+                            const val = parseInt(document.getElementById("work-duration").value);
+                            workDuration = val * 60;
+                            if (isWorkTime) resetTimer();
+                        }
+
+                        function updateBreakDuration() {
+                            const val = parseInt(document.getElementById("break-duration").value);
+                            breakDuration = val * 60;
+                            if (!isWorkTime) resetTimer();
+                        }
+
+                        resetTimer();
+                   
+  </script>
+</body>
+
+</html>

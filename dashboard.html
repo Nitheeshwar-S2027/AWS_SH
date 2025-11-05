@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 100%;
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+        }
+
+        .dashboard-sections {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .dashboard-sections li {
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .dashboard-item {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .dashboard-item:hover {
+            color: #b1c5cf;
+        }
+
+        .tooltip {
+            visibility: hidden;
+            background-color: #555;
+            color: #fff;
+            text-align: left;
+            border-radius: 5px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .dashboard-sections li:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .content {
+            margin-left: 60px;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-section {
+            height: 15%;
+            background-color: white;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid white;
+        }
+
+        .main-section {
+            display: flex;
+            flex-grow: 1;
+            padding: 10px;
+        }
+
+        .left-section,
+        .right-section {
+            flex: 1;
+            background-color: #eaeaea;
+            padding: 10px;
+            margin-right: 10px;
+        }
+
+        #page-content {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <ul class="dashboard-sections">
+                <li><a href="#" class="dashboard-item" onclick="loadPage('homein.html'); return false;"><i
+                            class="fas fa-home"></i><span class="tooltip">Home</span></a></li>
+                <li><a href="#" class="dashboard-item" onclick="loadPage('profile.html'); return false;"><i
+                            class="fas fa-user"></i><span class="tooltip">Profile</span></a></li>
+                <li><a href="#" class="dashboard-item" onclick="loadPage('notes.html'); return false;"><i
+                            class="fas fa-file-upload"></i><span class="tooltip">Notes</span></a></li>
+                <li><a href="#" class="dashboard-item" onclick="loadPage('todolist.html'); return false;"><i
+                            class="fas fa-tasks"></i><span class="tooltip">To-Do</span></a></li>
+                <li><a href="#" class="dashboard-item" onclick="loadPage('assignments.html'); return false;"><i
+                            class="fas fa-bell"></i><span class="tooltip">Assignments</span></a></li>
+                <li><a href="#" class="dashboard-item" onclick="loadPage('pomodoro.html'); return false;"><i
+                            class="fas fa-clock"></i><span class="tooltip">Pomodoro</span></a></li>
+                <li><a href="#" class="dashboard-item" onclick="logout(); return false;"><i
+                            class="fas fa-sign-out-alt"></i><span class="tooltip">Logout</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="content">
+            <div class="top-section">
+                <h3>Dashboard</h3>
+            </div>
+            <div id="page-content">
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "http://52.90.145.54:5000";
+
+        async function checkSession() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "login.html";
+                return false;
+            }
+            try {
+                const res = await fetch(`${BASE_URL}/check-session`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) throw new Error("Invalid session");
+                const data = await res.json();
+                return data.message === "Session valid";
+            } catch {
+                localStorage.removeItem("token");
+                window.location.href = "login.html";
+                return false;
+            }
+        }
+
+        async function loadPage(page) {
+            const valid = await checkSession();
+            if (!valid) return;
+            const pageContent = document.getElementById("page-content");
+            try {
+                const res = await fetch(page);
+                if (!res.ok) throw new Error("Page not found");
+                const html = await res.text();
+                pageContent.innerHTML = html;
+                const scripts = pageContent.getElementsByTagName("script");
+                for (let s of scripts) {
+                    const newScript = document.createElement("script");
+                    if (s.src) newScript.src = s.src;
+                    else newScript.textContent = s.textContent;
+                    document.body.appendChild(newScript);
+                }
+            } catch (err) {
+                pageContent.innerHTML = `<p>Error loading page: ${err.message}</p>`;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+        }
+
+        window.onload = async () => {
+            if (await checkSession()) loadPage("homein.html");
+        };
+    </script>
+</body>
+
+</html>

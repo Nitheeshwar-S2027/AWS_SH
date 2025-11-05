@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Bubble - Empowering Student Success</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: #f4f4f4; /* Light background */
+      color: #333; /* Dark text for contrast */
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    header {
+      background: #e0e0e0; /* Very light gray header */
+      padding: 60px 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    header h1 {
+      font-size: 3.5rem;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    header p {
+      font-size: 1.3rem;
+      color: #555;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    section {
+      padding: 80px 20px;
+      max-width: 1400px;
+      margin: auto;
+    }
+    section h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      color: #333; /* Dark text for section titles */
+      margin-bottom: 60px;
+    }
+    .bubble-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+    }
+    .bubble {
+      background: #ffffff; /* White background for bubbles */
+      border-radius: 12px; /* Slightly rounded corners */
+      padding: 40px;
+      width: 260px;
+      height: 260px;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      transition: transform 0.5s ease, background 0.3s;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      animation: float 4s ease-in-out infinite;
+    }
+    .bubble:hover {
+      transform: scale(1.05);
+      background: #f0f0f0; /* Light gray on hover */
+    }
+    .bubble h3 {
+      color: #333; /* Dark text for headings */
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+    }
+    .bubble p {
+      color: #666; /* Darker gray for text */
+      font-size: 0.95rem;
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .about {
+      background: #ffffff; /* White background for about section */
+      border-radius: 12px;
+      padding: 50px;
+      color: #333; /* Dark text */
+      margin-top: 60px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    .about h3 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      color: #333; /* Dark text for headings */
+    }
+    .about p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+    }
+    .testimonials {
+      background: #e0e0e0; /* Light gray for testimonials */
+      padding: 50px;
+      border-radius: 12px;
+      margin-top: 60px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    .testimonial {
+      margin-bottom: 20px;
+      font-style: italic;
+      color: #555;
+    }
+    .blog {
+      margin-top: 60px;
+      text-align: center;
+    }
+    .blog h3 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+    .blog p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: #666;
+    }
+    .cta {
+      background: #ffffff; /* White background for CTA */
+      padding: 50px;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 60px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    .cta h3 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+    .cta p {
+      font-size: 1.05rem;
+      margin-bottom: 30px;
+    }
+    .cta a {
+      text-decoration: none; /* Remove underline from link */
+    }
+    .cta button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      color: #fff;
+      background: #4caf50; /* Green button */
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .cta button:hover {
+      background: #45a049; /* Darker green on hover */
+    }
+    footer {
+      background: #e0e0e0; /* Very light gray footer */
+      text-align: center;
+      color: #333; /* Dark text for footer */
+      padding: 30px;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Student Bubble</h1>
+    <p>Your All-in-One Smart Portal designed to make student life organized, productive, and stress-free. From schedules to notes, collaboration to wellness—we've got it all covered!</p>
+  </header>
+
+  <section>
+    <h2>Powerful Features in Interactive Bubbles</h2>
+    <div class="bubble-container">
+      <div class="bubble">
+        <h3>Dashboard</h3>
+        <p>Personalized overview with your schedule, assignments, deadlines, and reminders at a glance.</p>
+      </div>
+      <div class="bubble">
+        <h3>Time Management</h3>
+        <p>To-do lists, Pomodoro timers, and study hour tracking tools to boost productivity.</p>
+      </div>
+      <div class="bubble">
+        <h3>Course Management</h3>
+        <p>Download notes, slides, and resources from professors and keep track of your grades.</p>
+      </div>
+      <div class="bubble">
+        <h3>Notes Sharing</h3>
+        <p>Upload, search, and share notes with fellow students organized by subject and keywords.</p>
+      </div>
+      <div class="bubble">
+        <h3>Planner</h3>
+        <p>Set assignment reminders, milestones, and integrate them with your academic calendar.</p>
+      </div>
+      <div class="bubble">
+        <h3>Exam Prep</h3>
+        <p>Access past exams, quizzes, and get AI-powered suggestions tailored to your strengths.</p>
+      </div>
+      <div class="bubble">
+        <h3>Collaboration</h3>
+        <p>Chat, form study groups, and share files seamlessly for group projects.</p>
+      </div>
+      <div class="bubble">
+        <h3>Resources</h3>
+        <p>Find scholarships, workshops, online courses, and academic events personalized to you.</p>
+      </div>
+      <div class="bubble">
+        <h3>Career Support</h3>
+        <p>Build resumes, find internships, and prepare for interviews with expert guidance.</p>
+      </div>
+      <div class="bubble">
+        <h3>Wellness</h3>
+        <p>Mental health tools, stress management tips, and fitness app links to stay healthy.</p>
+      </div>
+      <div class="bubble">
+        <h3>Event Hub</h3>
+        <p>Know about student club events, register easily, and never miss an activity again.</p>
+      </div>
+ <div class="bubble">
+        <h3>Finance Tracker</h3>
+        <p>Budget your expenses, track allowances, and access student discounts all in one place.</p>
+      </div>
+      <div class="bubble">
+        <h3>News & Alerts</h3>
+        <p>Live news and campus alerts delivered straight to your homepage to keep you updated.</p>
+      </div>
+      <div class="bubble">
+        <h3>Campus Services</h3>
+        <p>Reserve books, check cafeteria menus, and track campus transport timings effortlessly.</p>
+      </div>
+    </div>
+
+    <div class="about">
+      <h3>Why Student Bubble?</h3>
+      <p>Student Bubble was created to be more than just a dashboard. It's a lifestyle companion built for modern learners. It streamlines everything from task management to wellness so students can focus on learning, not juggling tools. With creative design, intuitive interface, and an all-in-one system, it’s your digital backpack for school, university, and beyond. Whether you're a freshman or a final-year student, it empowers you to take control of your academic journey, collaborate with peers, and reach your goals without burnout.</p>
+    </div>
+
+    <div class="testimonials">
+      <h3>What Our Users Say</h3>
+      <div class="testimonial">"Student Bubble has transformed my academic life! I can manage everything in one place." - Alex R.</div>
+      <div class="testimonial">"The features are incredibly helpful, especially the time management tools!" - Jamie L.</div>
+      <div class="testimonial">"I love the collaborative features! It makes group projects so much easier." - Sam T.</div>
+    </div>
+
+    <div class="blog">
+      <h3>Latest Blog Posts</h3>
+      <p>Check out our latest articles on study tips, productivity hacks, and student life advice to help you succeed.</p>
+      <p><strong>1. How to Balance Study and Social Life</strong></p>
+      <p>Learn effective strategies to manage your time and enjoy your college experience.</p>
+      <p><strong>2. Top 10 Study Techniques for Success</strong></p>
+      <p>Discover proven methods to enhance your learning and retention.</p>
+      <p><strong>3. The Importance of Mental Health in Education</strong></p>
+      <p>Understand how to prioritize your well-being while pursuing your academic goals.</p>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 Student Bubble | Built for Student Excellence | HTML, CSS, JavaScript, Node.js/Python, MongoDB/PostgreSQL
+  </footer>
+</body>
+</html>

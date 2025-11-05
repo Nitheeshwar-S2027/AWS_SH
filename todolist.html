@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+            width: 80%;
+            margin: auto;
+        }
+
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        input,
+        select {
+            margin-right: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            flex: 1;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #taskList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: white;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .task-details {
+            flex-grow: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #deleteArea {
+            margin-top: 20px;
+            padding: 10px;
+            border: 2px dashed #f00;
+            text-align: center;
+            color: #333;
+            border-radius: 5px;
+            background-color: #fff0f0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>To-Do List</h1>
+        </div>
+        <div class="form-container">
+            <form id="taskForm">
+                <input type="text" id="taskName" placeholder="Task Name" required />
+                <input type="date" id="dueDate" required />
+                <select id="importance">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+                <button type="submit">Add Task</button>
+            </form>
+        </div>
+        <ul id="taskList"></ul>
+        <div id="deleteArea">🗑️ Drop here to delete</div>
+    </div>
+
+    <script>
+        const todoAPI = "http://52.90.145.54:5000";
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            alert("Please login first.");
+            window.location.href = "login.html";
+        }
+
+        const taskForm = document.getElementById("taskForm");
+        const taskList = document.getElementById("taskList");
+        const deleteArea = document.getElementById("deleteArea");
+
+        // Load all tasks
+        async function loadTasks() {
+            try {
+                const r = await fetch(`${todoAPI}/get-todos`, {
+                    headers: { Authorization: "Bearer " + token },
+                });
+                const tasks = await r.json();
+                taskList.innerHTML = "";
+                if (!tasks.length) {
+                    taskList.innerHTML = "<li>No tasks available.</li>";
+                    return;
+                }
+                tasks.forEach((t) => taskList.appendChild(createTaskElement(t)));
+            } catch (e) {
+                alert("Error loading tasks: " + e.message);
+            }
+        }
+
+        // Create task element
+        function createTaskElement(task) {
+            const li = document.createElement("li");
+            li.className = "task-item";
+            li.draggable = true;
+            li.dataset.id = task.todoId;
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = task.completed === true;
+            if (checkbox.checked) li.style.textDecoration = "line-through";
+            checkbox.onchange = () => updateTaskStatus(task.todoId, checkbox.checked, li);
+
+            const taskDetails = document.createElement("div");
+            taskDetails.className = "task-details";
+            taskDetails.innerHTML = `
+                <span>${task.name}</span>
+                <span>Due: ${new Date(task.dueDate).toLocaleDateString()}</span>
+                <span>Importance: ${task.importance}</span>
+            `;
+
+            li.appendChild(checkbox);
+            li.appendChild(taskDetails);
+            li.ondragstart = () => li.classList.add("dragging");
+            li.ondragend = () => li.classList.remove("dragging");
+            return li;
+        }
+
+        // Update completion status
+        async function updateTaskStatus(id, completed, li) {
+            try {
+                const r = await fetch(`${todoAPI}/update-todo/${id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + token,
+                    },
+                    body: JSON.stringify({ completed }),
+                });
+
+                const data = await r.json();
+                if (data.message === "Todo updated") {
+                    li.style.textDecoration = completed ? "line-through" : "none";
+                }
+            } catch {
+                alert("Failed to update task");
+            }
+        }
+
+        // Add new task
+        taskForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById("taskName").value.trim(),
+                dueDate: document.getElementById("dueDate").value,
+                importance: document.getElementById("importance").value,
+            };
+
+            try {
+                const r = await fetch(`${todoAPI}/add-todo`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + token,
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const json = await r.json();
+                if (json.todo) taskList.appendChild(createTaskElement(json.todo));
+                taskForm.reset();
+            } catch {
+                alert("Error adding task");
+            }
+        });
+
+        // Drag-drop delete
+        deleteArea.ondragover = (e) => e.preventDefault();
+        deleteArea.ondrop = async () => {
+            const dragging = document.querySelector(".dragging");
+            if (!dragging) return;
+
+            const id = dragging.dataset.id;
+
+            const r = await fetch(`${todoAPI}/delete-todo/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: "Bearer " + token },
+            });
+
+            const json = await r.json();
+            if (json.message === "Todo deleted successfully") {
+                taskList.removeChild(dragging);
+            }
+        };
+
+        loadTasks();
+    </script>
+</body>
+
+</html>

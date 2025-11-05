@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Assignments</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .box {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #222;
+        }
+
+        label {
+            display: block;
+            margin: 8px 0 4px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+        }
+
+        button {
+            padding: 12px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #222;
+            color: #fff;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status {
+            font-weight: bold;
+            color: #0066cc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h1>Assignments</h1>
+        <form id="assignForm">
+            <label>Course</label><input type="text" id="assignCourse" required>
+            <label>Title</label><input type="text" id="assignTitle" required>
+            <label>Due Date</label><input type="date" id="assignDue" required>
+            <label>Reminder Time</label><input type="datetime-local" id="assignRemind" required>
+            <button type="submit">ADD ASSIGNMENT</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Title</th>
+                    <th>Due</th>
+                    <th>Reminder</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="assignList"></tbody>
+        </table>
+    </div>
+
+    <script>
+        (function () {
+            // Prevent "$ is not defined" errors if any script references jQuery
+            if (typeof window.$ === 'undefined') window.$ = () => { };
+
+            const assignAPI = "http://52.90.145.54:5000";
+            const assignToken = localStorage.getItem("token");
+            if (!assignToken) {
+                alert("Please login first.");
+                window.location.href = "login.html";
+                return;
+            }
+
+            const list = document.getElementById("assignList");
+            const form = document.getElementById("assignForm");
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const data = {
+                    course: document.getElementById("assignCourse").value,
+                    title: document.getElementById("assignTitle").value,
+                    dueDate: document.getElementById("assignDue").value,
+                    reminderTime: document.getElementById("assignRemind").value,
+                };
+
+                try {
+                    const r = await fetch(`${assignAPI}/save-assignment`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${assignToken}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    const json = await r.json();
+                    if (json.message === "Assignment saved") {
+                        alert("✅ Assignment added!");
+                        addRow({ ...data, assignmentId: json.assignmentId, status: "Pending" });
+                        form.reset();
+                    } else {
+                        alert(json.message || "Error saving assignment");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Network error while saving assignment.");
+                }
+            });
+
+            function addRow(a) {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+          <td>${a.course}</td>
+          <td>${a.title}</td>
+          <td>${new Date(a.dueDate).toLocaleDateString()}</td>
+          <td>${a.reminderTime ? new Date(a.reminderTime).toLocaleString() : '—'}</td>
+          <td class="status">${a.status || "Pending"}</td>
+        `;
+                list.prepend(tr);
+            }
+
+            async function loadAssignments() {
+                try {
+                    const r = await fetch(`${assignAPI}/get-assignments`, {
+                        headers: { "Authorization": `Bearer ${assignToken}` },
+                    });
+                    if (!r.ok) throw new Error("Failed to load");
+                    const arr = await r.json();
+                    list.innerHTML = "";
+                    if (arr.length === 0) {
+                        list.innerHTML = "<tr><td colspan='5' style='text-align:center'>No assignments yet</td></tr>";
+                        return;
+                    }
+                    arr.forEach(addRow);
+                } catch (err) {
+                    console.error(err);
+                    list.innerHTML = "<tr><td colspan='5' style='text-align:center;color:red'>Error loading assignments</td></tr>";
+                }
+            }
+
+            loadAssignments();
+        })();
+    </script>
+</body>
+
+</html>
