@@ -1,147 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Upload Notes</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .notes-container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
-        }
-
-        h1,
-        h2 {
-            color: #333;
-        }
-
-        form {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        input[type=file] {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-
-        button {
-            padding: 10px;
-            background: #333;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #555;
-        }
-
-        #uploadStatus {
-            margin: 10px 0;
-            text-align: center;
-        }
-
-        #loadingSpinner {
-            display: none;
-            margin-right: 8px;
-        }
-
-        #fileList {
-            list-style: none;
-            padding: 0;
-        }
-
-        #fileList li {
-            background: #eaeaea;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 4px;
-        }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 24px;
+        max-width: 900px;
+        margin: auto;
+      }
+      .card {
+        padding: 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 12px;
+      }
+      .files-list {
+        margin-top: 12px;
+      }
+      .file-item {
+        padding: 6px 0;
+        border-bottom: 1px dashed #eee;
+      }
+      .hidden {
+        display: none;
+      }
     </style>
-</head>
+  </head>
+  <body>
+    <h1>Upload Your Notes</h1>
 
-<body>
-    <div class="notes-container">
-        <h1>Upload Your Notes</h1>
-        <form id="uploadForm">
-            <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" required>
-            <button type="submit">Upload</button>
-        </form>
-        <div id="uploadStatus">
-            <span id="loadingSpinner"><i class="fas fa-spinner fa-spin"></i></span>
-            <span id="uploadMessage"></span>
-        </div>
-        <h2>Uploaded Files</h2>
-        <ul id="fileList"></ul>
+    <div class="card">
+      <form id="uploadForm">
+        <label for="fileInput">Choose file (pdf, docx, txt, png, jpg):</label>
+        <input id="fileInput" name="file" type="file" required />
+        <br /><br />
+        <button type="submit">Upload</button>
+        <span id="status" style="margin-left: 12px"></span>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Uploaded Files</h3>
+      <div id="uploadedList" class="files-list">
+        <!-- uploaded items will appear here -->
+      </div>
     </div>
 
     <script>
-        const BACKEND = "http://52.90.145.54:5000";
-        const token = localStorage.getItem("token") || alert("Login first!") && (location.href = "login.html");
+      /*
+  Make sure BASE_URL matches backend (server.js uses port 5000 in your repo)
+  If your backend is at http://52.90.145.54:5000 (as main.js shows), keep that.
+  Otherwise set it to your deployed backend base URL.
+*/
+      const BASE_URL = "http://52.90.145.54:5000";
 
-        const form = document.getElementById("uploadForm");
-        const msg = document.getElementById("uploadMessage");
-        const spin = document.getElementById("loadingSpinner");
-        const list = document.getElementById("fileList");
+      const uploadForm = document.getElementById("uploadForm");
+      const fileInput = document.getElementById("fileInput");
+      const status = document.getElementById("status");
+      const uploadedList = document.getElementById("uploadedList");
 
-        form.onsubmit = async e => {
-            e.preventDefault();
-            const file = document.getElementById("fileInput").files[0];
-            if (!file) return msg.innerText = "Select a file";
+      const sessionUploaded = []; // keep track in this client session
 
-            const fd = new FormData();
-            fd.append("file", file);
-            spin.style.display = "inline";
-            msg.innerText = "Uploading…";
-
-            try {
-                const r = await fetch(`${BACKEND}/upload`, {
-                    method: "POST",
-                    body: fd,
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (!r.ok) throw 0;
-                msg.innerText = "Uploaded!";
-                form.reset();
-                loadFiles();
-            } catch {
-                msg.innerText = "Failed – try again";
-            } finally {
-                spin.style.display = "none";
-            }
-        };
-
-        async function loadFiles() {
-            try {
-                const r = await fetch(`${BACKEND}/files`, { headers: { Authorization: `Bearer ${token}` } });
-                const files = await r.json();
-                list.innerHTML = "";
-                files.forEach(f => {
-                    const li = document.createElement("li");
-                    const a = document.createElement("a");
-                    a.href = `${BACKEND}/uploads/${f}`;
-                    a.textContent = f;
-                    a.target = "_blank";
-                    li.appendChild(a);
-                    list.prepend(li);
-                });
-            } catch {
-                list.innerHTML = "<li>No files yet</li>";
-            }
+      uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        status.textContent = "Uploading...";
+        if (!fileInput.files || fileInput.files.length === 0) {
+          status.textContent = "Select a file first.";
+          return;
         }
-        loadFiles();
-    </script>
-</body>
+        const file = fileInput.files[0];
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
 
+          // no Authorization required for /upload in server.js (but add header if your server expects auth)
+          const resp = await fetch(`${BASE_URL}/upload`, {
+            method: "POST",
+            body: formData,
+            // credentials: 'include' // uncomment if backend expects cookie auth
+          });
+
+          if (!resp.ok) {
+            const txt = await resp.text();
+            status.textContent = `Upload failed: ${resp.status} ${txt}`;
+            return;
+          }
+
+          const json = await resp.json();
+          // server responds { message: "File uploaded successfully", fileName }
+          const fn = json.fileName || file.name;
+          sessionUploaded.unshift({
+            fileName: fn,
+            originalName: file.name,
+            time: new Date().toLocaleString(),
+          });
+          renderUploaded();
+          status.textContent = "Upload successful ✓";
+          fileInput.value = ""; // reset file input
+        } catch (err) {
+          console.error("Upload error:", err);
+          status.textContent = "Upload error (see console)";
+        }
+      });
+
+      function renderUploaded() {
+        uploadedList.innerHTML = "";
+        if (sessionUploaded.length === 0) {
+          uploadedList.innerHTML =
+            "<div class='file-item'>No uploads yet</div>";
+          return;
+        }
+        sessionUploaded.forEach((item) => {
+          const div = document.createElement("div");
+          div.className = "file-item";
+          // show server file key and a link to S3 (if you make objects public or generate signed URL)
+          div.innerHTML = `<strong>${escapeHtml(item.originalName)}</strong>
+                     <div style="font-size:0.9em;color:#444">Stored as: ${escapeHtml(
+                       item.fileName
+                     )} • ${item.time}</div>`;
+          uploadedList.appendChild(div);
+        });
+      }
+
+      // small helper
+      function escapeHtml(s) {
+        return String(s).replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[m])
+        );
+      }
+
+      // --- Optional: fetch list from server endpoint if you implement server listing
+      async function fetchServerList() {
+        try {
+          const resp = await fetch(`${BASE_URL}/list-uploads`);
+          if (!resp.ok) return;
+          const arr = await resp.json();
+          // arr should be array of keys. Prepend to session view (not a persistent store)
+          arr.reverse().forEach((k) => {
+            sessionUploaded.push({
+              fileName: k.Key || k,
+              originalName: k.Key || k,
+              time: "",
+            });
+          });
+          renderUploaded();
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      // fetchServerList(); // call if you add backend listing route
+    </script>
+  </body>
 </html>
